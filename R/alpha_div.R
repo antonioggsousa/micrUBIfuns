@@ -27,8 +27,9 @@ prevalence <- function(physeq, tax_rank) {
   }
 
   # retrieve otu tbl
-  if ( taxa_are_rows(physeq) & all( rownames(otu_table(physeq)) == rownames(tax_table(physeq)) ) ) { # check if
+  if ( taxa_are_rows(physeq) ) { # check if
     #taxa are rows & ASV/OTU names match between otu_table() and tax_table()
+    stopifnot( all( rownames(otu_table(physeq)) == rownames(tax_table(physeq)) ) )
     otu_tbl <- physeq@otu_table@.Data
   } else { # retrieve mtx and if not 'taxa_are_rows' tranpose
     stopifnot( all( colnames(otu_table(physeq)) == rownames(tax_table(physeq)) ) )
