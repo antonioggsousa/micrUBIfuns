@@ -12,7 +12,7 @@
 melt_physeq <- function(physeq) {
 
   require("phyloseq")
-  require("data.table")
+  library("data.table")
 
   # check input
   if(class(physeq) != "phyloseq") stop(paste0(physeq, " is not a 'phyloseq' object!"))
@@ -21,9 +21,9 @@ melt_physeq <- function(physeq) {
     'tax_table', 'sam_data'!\nThe 3 slots are necessary to use the 'melt_physeq' function.\nAborting..."))
   }
   # combine: otu and tax tables
-  if ( taxa_are_rows(physeq) &
-       all( rownames(otu_table(physeq)) == rownames(tax_table(physeq)) ) ) { # check if
+  if ( taxa_are_rows(physeq) ) { # check if
     #taxa are rows & ASV/OTU names match between otu_table() and tax_table()
+    stopifnot( all( rownames(otu_table(physeq)) == rownames(tax_table(physeq)) ) )
     physeq_melt <- cbind.data.frame(physeq@otu_table@.Data, physeq@tax_table@.Data)
   } else { # transpose before cbind
     stopifnot( all( colnames(otu_table(physeq)) == rownames(tax_table(physeq)) ) )
