@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1598793975956.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2164376938",
+    "id" : "D784C481",
+    "lastKnownWriteTime" : 1598802843,
+    "last_content_update" : 1598802843843,
+    "path" : "/mnt/cf9fda1c-c2b7-4946-9054-b37aad1c090a/resources/R_microbiome_funs/micrUBIfuns/R/miscellaneous.R",
+    "project_path" : "R/miscellaneous.R",
+    "properties" : {
+        "cursorPosition" : "27,35",
+        "scrollLine" : "0",
+        "tempName" : "Untitled2"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

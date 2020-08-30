@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1598715431523.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "926192554",
+    "id" : "F678630B",
+    "lastKnownWriteTime" : 1598719720,
+    "last_content_update" : 1598719720189,
+    "path" : "/mnt/cf9fda1c-c2b7-4946-9054-b37aad1c090a/resources/R_microbiome_funs/micrUBIfuns/R/beta_div.R",
+    "project_path" : "R/beta_div.R",
+    "properties" : {
+        "cursorPosition" : "9,40",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
