@@ -1,3 +1,95 @@
+#' Rank taxa
+#'
+#' Given a phyloseq object (with absolute abundance counts) and a taxonomic
+#' rank (character - one among 'rank_names(physeq)') it gives the taxa (by 'tax_rank')
+#' summarized for the whole data set ranked by abundance.
+#' @param physeq phyloseq-class object.
+#' @param tax_rank taxonomic rank (character). One of the taxonomic ranks among
+#' the column names of 'tax_table()' of the 'physeq' object given.
+#' @param top_taxa top most abundant taxa to select by 'tax_rank' (numeric - coerced
+#' to integer). Default 'NULL'.
+#' @param type_count type of counts to perform 'rank_taxa()'. It can be absolute, i.e.,
+#' 'abs', or percentage, i.e., 'perc' (character). Default is 'abs' - absolute counts.
+#' @return It returns a list with a tibble data frame ('$data') and ggplot ('$plot')
+#' ranking the taxa picked at the taxonomic rank select at 'tax_rank'.
+#' @export
+
+rank_taxa <- function(physeq, tax_rank, top_taxa = NULL,
+                      type_count = "abs", ...) {
+
+  # packages
+  require("phyloseq")
+  require("dplyr")
+
+  # check input
+  if(class(physeq) != "phyloseq") stop(paste0(deparse(substitute(physeq)), " is not a 'phyloseq' object!"))
+  if( !all( c("otu_table", "tax_table") %in% slotNames(physeq) ) ) { # check the 2 physeq slots
+    stop(paste0(deparse(substitute(physeq)), " does not contain at least one of the 2 slots: 'otu_table',
+    'tax_table'!\nThe 2 slots are necessary to use the 'prevalence' function.\nAborting..."))
+  }
+  stopifnot( all(c(is.character(tax_rank), is.character(type_count))) )
+  stopifnot( tax_rank %in% rank_names(physeq) )
+  stopifnot( type_count %in% c("abs", "perc") )
+  checkInteger <- (physeq@otu_table@.Data%%1==0) # to deal with double like, e.g., 1 (by default - double)
+  #and not as integer (coerce 1L)
+  if ( !all(checkInteger == TRUE) ) stop(paste0("otu_table(", deparse(substitute(physeq)), ") is not integer!"))
+
+  # tax glom by 'tax_rank'
+  physeq_rank <- tax_glom(physeq = physeq, taxrank = tax_rank)
+  physeq_rank <- do.call(filter_feature_table, list(physeq = physeq_rank, ...))
+
+  if ( !is.null(top_taxa) ) { # get 'top_taxa'
+    stopifnot( is.numeric(top_taxa) )
+    top_taxa <- as.integer(top_taxa)
+    top_taxa <- names(sort(taxa_sums(x = physeq_rank), TRUE)[1:top_taxa])
+    physeq_rank   <- prune_taxa(taxa = top_taxa, x = physeq_rank)
+  }
+
+  # rank by abundance
+  physeq_rank_melted <- melt_physeq(physeq = physeq_rank)
+  physeq_rank_melted_2_plot <-
+    physeq_rank_melted %>%
+    select(.data[[tax_rank]], Abundance) %>%
+    group_by(.data[[tax_rank]]) %>%
+    summarise(Abundance = sum(Abundance)) %>%
+    filter(Abundance != 0) %>% # rm phyla without abundance
+    arrange(desc(Abundance)) %>%
+    mutate(!!tax_rank := factor(.data[[tax_rank]],
+                                levels = unique(.data[[tax_rank]])))
+  if ( type_count == "abs" ) {
+    y_lab <- "Absolute abundance"
+    abundance <- "Abundance"
+    y_max <- max(physeq_rank_melted_2_plot[, "Abundance", drop = TRUE]) * 1.1
+  } else {
+    physeq_rank_melted_2_plot <-
+      physeq_rank_melted_2_plot %>%
+      mutate("Percentage" = round( Abundance / sum( Abundance ) * 100, 2) )
+    y_lab <- "Percentage (%)"
+    abundance <- "Percentage"
+    y_max <- max(physeq_rank_melted_2_plot[, "Percentage", drop = TRUE]) + 5
+  }
+
+  # plot
+  taxa_barplot_ranked <-
+    ggplot(data = physeq_rank_melted_2_plot, aes_string(x = tax_rank,
+                                                        y = abundance)) +
+    geom_bar(stat = "identity") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+    ylab(y_lab) +
+    geom_text(aes_string(label = abundance),
+              angle = 45, vjust=0, hjust = 0, size=3) +
+    ylim(c(0, y_max))
+
+  # save output
+  listOut <- list(data = physeq_rank_melted_2_plot,
+                  plot = taxa_barplot_ranked)
+
+  return(listOut)
+}
+
+#---------------------------------------------------------------------------------------------------------------
+
 #' Filter phyloseq object based on samples and taxa.
 #'
 #' Filter phyloseq object based on samples and taxa names or minimum number of reads.
@@ -34,7 +126,10 @@ filter_feature_table <- function(physeq, taxa2filter = NULL,
 
   ## Filter samples
   #
-  if ( !is.null(samples2filter) ) physeq <- prune_samples(samples = samples2filter, x = physeq)
+  if ( !is.null(samples2filter) ) {
+    stopifnot( all(samples2filter %in% sample_names(physeq)) )
+    physeq <- prune_samples(samples = !(sample_names(physeq) %in% samples2filter), x = physeq)
+  }
   samples2keep <- sample_sums(physeq) > min_sample_depth
   physeq <- prune_samples(samples = samples2keep, x = physeq)
 
