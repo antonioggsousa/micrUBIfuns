@@ -173,7 +173,6 @@ rank_taxa <- function(physeq, tax_rank, count_type = "abs",
       list_taxa <- physeq_rank_melted_2_plot %>%
         pull(.data[[tax_rank]]) %>%
         levels(.)
-      print(list_taxa)
       physeq_rank_melted_2_plot <-
         physeq_rank_melted_2_plot %>%
         filter(.data[[tax_rank]] %in% list_taxa[1:show_top])
@@ -182,6 +181,7 @@ rank_taxa <- function(physeq, tax_rank, count_type = "abs",
     if ( !is.null(taxa_perc_cutoff) ) {
       if ( count_type == "abs" ) {
         physeq_rank_melted_2_plot <-
+          physeq_rank_melted_2_plot %>%
           group_by(.data[[group]]) %>%
           mutate("Percentage" = round( Abundance / sum( Abundance ) * 100, 2) ) %>%
           filter(Percentage >= taxa_perc_cutoff) %>%
