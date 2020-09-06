@@ -17,6 +17,8 @@
 #' @param group factorial variable to group, one among 'sample_variables(physeq)'.
 #' Default is 'NULL'.
 #' @param taxa_perc_cutoff percentage cutoff to remove less abundant taxa. Default is 'NULL'.
+#' @param rm_na include (TRUE) or not (FALSE) NAs, i.e., taxa without classification at
+#' the taxonomic level specified at 'tax_rank'.
 #' @param ... parameters to be passed to the function 'filter_feature_table()'.
 #' @return It returns a list with a tibble data frame ('$data') and ggplot ('$plot')
 #' ranking the taxa picked at the taxonomic rank select at 'tax_rank'.
@@ -24,7 +26,8 @@
 
 rank_taxa <- function(physeq, tax_rank, count_type = "abs",
                       top_taxa = NULL, show_top = NULL,
-                      group = NULL, taxa_perc_cutoff = NULL, ...) {
+                      group = NULL, taxa_perc_cutoff = NULL,
+                      rm_na = FALSE, ...) {
 
   # packages
   require("phyloseq")
@@ -41,6 +44,7 @@ rank_taxa <- function(physeq, tax_rank, count_type = "abs",
   stopifnot( all(c(length(tax_rank) == 1, tax_rank %in% rank_names(physeq))) )
   stopifnot( count_type %in% c("abs", "perc") )
   stopifnot( !all(c(!is.null(show_top), !is.null(taxa_perc_cutoff))) )
+  stopifnot( is.logical(rm_na) )
   if ( !is.null(group) ) stopifnot( all(c(length(group) == 1, group %in% sample_variables(physeq))) )
   if ( !is.null(show_top) ) stopifnot( all(c(length(show_top)==1, is.numeric(show_top))) )
   if ( !is.null(taxa_perc_cutoff) ) stopifnot( all(c(length(taxa_perc_cutoff)==1, is.numeric(taxa_perc_cutoff)), taxa_perc_cutoff < 100) )
@@ -49,7 +53,7 @@ rank_taxa <- function(physeq, tax_rank, count_type = "abs",
   if ( !all(checkInteger == TRUE) ) stop(paste0("otu_table(", deparse(substitute(physeq)), ") is not integer!"))
 
   # tax glom by 'tax_rank'
-  physeq_rank <- tax_glom(physeq = physeq, taxrank = tax_rank, NArm = FALSE)
+  physeq_rank <- tax_glom(physeq = physeq, taxrank = tax_rank, NArm = rm_na)
   physeq_rank <- do.call(filter_feature_table, list(physeq = physeq_rank, ...))
 
   if ( !is.null(top_taxa) ) { # get 'top_taxa'

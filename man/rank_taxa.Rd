@@ -12,6 +12,7 @@ rank_taxa(
   show_top = NULL,
   group = NULL,
   taxa_perc_cutoff = NULL,
+  rm_na = FALSE,
   ...
 )
 }
@@ -36,6 +37,9 @@ still refers to the percentage of overall data before discarding the non-top n t
 Default is 'NULL'.}
 
 \item{taxa_perc_cutoff}{percentage cutoff to remove less abundant taxa. Default is 'NULL'.}
+
+\item{rm_na}{include (TRUE) or not (FALSE) NAs, i.e., taxa without classification at
+the taxonomic level specified at 'tax_rank'.}
 
 \item{...}{parameters to be passed to the function 'filter_feature_table()'.}
 }
