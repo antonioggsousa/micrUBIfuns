@@ -4,7 +4,16 @@
 \alias{rank_taxa}
 \title{Rank taxa}
 \usage{
-rank_taxa(physeq, tax_rank, top_taxa = NULL, type_count = "abs", ...)
+rank_taxa(
+  physeq,
+  tax_rank,
+  count_type = "abs",
+  top_taxa = NULL,
+  show_top = NULL,
+  group = NULL,
+  taxa_perc_cutoff = NULL,
+  ...
+)
 }
 \arguments{
 \item{physeq}{phyloseq-class object.}
@@ -12,11 +21,23 @@ rank_taxa(physeq, tax_rank, top_taxa = NULL, type_count = "abs", ...)
 \item{tax_rank}{taxonomic rank (character). One of the taxonomic ranks among
 the column names of 'tax_table()' of the 'physeq' object given.}
 
-\item{top_taxa}{top most abundant taxa to select by 'tax_rank' (numeric - coerced
-to integer). Default 'NULL'.}
-
-\item{type_count}{type of counts to perform 'rank_taxa()'. It can be absolute, i.e.,
+\item{count_type}{type of counts to perform 'rank_taxa()'. It can be absolute, i.e.,
 'abs', or percentage, i.e., 'perc' (character). Default is 'abs' - absolute counts.}
+
+\item{top_taxa}{top most abundant taxa to select by 'tax_rank' (numeric - coerced
+to integer) in the overall data set. Default 'NULL'. If 'count_type = perc', the
+percentage ranging from 0-100\% will be determined for the 'top_taxa' only.}
+
+\item{show_top}{top n taxa to show (numeric - coerced to integer). Default is 'NULL'.
+The difference to 'top_taxa' is that if 'count_type = "perc"', the percentage presented
+still refers to the percentage of overall data before discarding the non-top n taxa.}
+
+\item{group}{factorial variable to group, one among 'sample_variables(physeq)'.
+Default is 'NULL'.}
+
+\item{taxa_perc_cutoff}{percentage cutoff to remove less abundant taxa. Default is 'NULL'.}
+
+\item{...}{parameters to be passed to the function 'filter_feature_table()'.}
 }
 \value{
 It returns a list with a tibble data frame ('$data') and ggplot ('$plot')
