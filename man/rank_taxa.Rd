@@ -36,7 +36,8 @@ still refers to the percentage of overall data before discarding the non-top n t
 \item{group}{factorial variable to group, one among 'sample_variables(physeq)'.
 Default is 'NULL'.}
 
-\item{taxa_perc_cutoff}{percentage cutoff to remove less abundant taxa. Default is 'NULL'.}
+\item{taxa_perc_cutoff}{percentage cutoff to remove less abundant taxa than
+'taxa_perc_cutoff'. Default is 'NULL'.}
 
 \item{rm_na}{include (TRUE) or not (FALSE) NAs, i.e., taxa without classification at
 the taxonomic level specified at 'tax_rank'.}

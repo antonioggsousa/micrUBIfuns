@@ -16,7 +16,8 @@
 #' still refers to the percentage of overall data before discarding the non-top n taxa.
 #' @param group factorial variable to group, one among 'sample_variables(physeq)'.
 #' Default is 'NULL'.
-#' @param taxa_perc_cutoff percentage cutoff to remove less abundant taxa. Default is 'NULL'.
+#' @param taxa_perc_cutoff percentage cutoff to remove less abundant taxa than
+#' 'taxa_perc_cutoff'. Default is 'NULL'.
 #' @param rm_na include (TRUE) or not (FALSE) NAs, i.e., taxa without classification at
 #' the taxonomic level specified at 'tax_rank'.
 #' @param ... parameters to be passed to the function 'filter_feature_table()'.
@@ -109,12 +110,12 @@ rank_taxa <- function(physeq, tax_rank, count_type = "abs",
         physeq_rank_melted_2_plot <-
           physeq_rank_melted_2_plot %>%
           mutate("Percentage" = round( Abundance / sum( Abundance ) * 100, 2) ) %>%
-          filter(Percentage > taxa_perc_cutoff) %>%
+          filter(Percentage >= taxa_perc_cutoff) %>%
           select(-Percentage)
         } else {
       physeq_rank_melted_2_plot <-
         physeq_rank_melted_2_plot %>%
-        filter(Percentage > taxa_perc_cutoff)
+        filter(Percentage >= taxa_perc_cutoff)
         }
       }
 
@@ -183,12 +184,12 @@ rank_taxa <- function(physeq, tax_rank, count_type = "abs",
         physeq_rank_melted_2_plot <-
           group_by(.data[[group]]) %>%
           mutate("Percentage" = round( Abundance / sum( Abundance ) * 100, 2) ) %>%
-          filter(Percentage > taxa_perc_cutoff) %>%
+          filter(Percentage >= taxa_perc_cutoff) %>%
           select(-Percentage)
         } else {
         physeq_rank_melted_2_plot <-
           physeq_rank_melted_2_plot %>%
-          filter(Percentage > taxa_perc_cutoff)
+          filter(Percentage >= taxa_perc_cutoff)
         }
       }
 
