@@ -49,7 +49,7 @@ rank_taxa <- function(physeq, tax_rank, count_type = "abs",
   if ( !all(checkInteger == TRUE) ) stop(paste0("otu_table(", deparse(substitute(physeq)), ") is not integer!"))
 
   # tax glom by 'tax_rank'
-  physeq_rank <- tax_glom(physeq = physeq, taxrank = tax_rank)
+  physeq_rank <- tax_glom(physeq = physeq, taxrank = tax_rank, NArm = FALSE)
   physeq_rank <- do.call(filter_feature_table, list(physeq = physeq_rank, ...))
 
   if ( !is.null(top_taxa) ) { # get 'top_taxa'
