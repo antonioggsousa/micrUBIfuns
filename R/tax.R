@@ -265,8 +265,10 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
   # perc vs. abs y-axis column selection
   if ( count_type == "abs" ) {
     abundance = "Abundance"
+    y_lab <- "Absolute abundance"
   } else {
     abundance = "Percentage"
+    y_lab <- "Percentage (%)"
   }
 
   ## Annotation df
@@ -293,32 +295,55 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
       x_var_levels <- as.character(annot_df[,x_var, drop = TRUE]) # order 'x_var' fct var
     }
   }
-  annot_df$y_axis <- data2plot %>% group_by(.data[[x_var]]) %>%
-    summarise("Sum" = sum(.data[[abundance]])) %>% pull(Sum) %>% max(.)
-  data2plot <- left_join(data2plot, annot_df, by = x_var)
-  data2plot <- data2plot %>% mutate(!!x_var := factor(.data[[x_var]], levels = x_var_levels))
+  if ( is.null(group) ) {
 
-  ## Plot
-  taxa_barplot_ranked  <- ggplot(data = data2plot,
-                                 aes_string(x = x_var,
-                                            y = abundance,
-                                            fill = y_var)) +
-    geom_bar(stat = "identity") +
-    theme_classic() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
-    ylab(y_lab) +
-    geom_segment(aes(x = x_axis - 0.5, xend = x_axis + 0.5,
-                     y = y_axis * 1.05, yend = y_axis * 1.05,
-                     color = col_bar), size = 3) +
-    scale_color_manual(name = col_bar, values = ggsci::pal_npg()(10)) +
-    facet_wrap(as.formula(paste("~", group)), scales = "free",
-               labeller = labeller(.cols = facet_label),
-               ncol = 3)
+  }
+  data2plot <- left_join(data2plot, annot_df, by = x_var)
+  data2plot <- data2plot %>% ungroup() %>%
+    mutate(!!x_var := factor(.data[[x_var]], levels = x_var_levels))
+
+  if ( is.null(group) ) {
+    annot_df$y_axis <- data2plot %>% group_by(.data[[x_var]]) %>%
+      summarise("Sum" = sum(.data[[abundance]])) %>% pull(Sum) %>% max(.)
+    taxa_barplot_ranked  <- ggplot(data = data2plot,
+                                   aes_string(x = x_var,
+                                              y = abundance,
+                                              fill = y_var)) +
+      geom_bar(stat = "identity") +
+      theme_classic() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+      ylab(y_lab) +
+      geom_segment(aes(x = x_axis - 0.5, xend = x_axis + 0.5,
+                       y = y_axis * 1.05, yend = y_axis * 1.05,
+                       color = col_bar), size = 3) +
+      scale_color_manual(name = col_bar, values = ggsci::pal_npg()(10))
+  } else {
+     y_axis_data <- data2plot %>% group_by(group, .data[[x_var]]) %>%
+      summarise("Sum" = sum(.data[[abundance]])) %>%
+      summarise("y_axis" = max(Sum))
+     data2plot <- left_join(data2plot, y_axis_data, by = "group")
+     taxa_barplot_ranked  <- ggplot(data = data2plot,
+                                   aes_string(x = x_var,
+                                              y = abundance,
+                                              fill = y_var)) +
+      geom_bar(stat = "identity") +
+      theme_classic() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+      ylab(y_lab) +
+      geom_segment(aes(x = x_axis - 0.5, xend = x_axis + 0.5,
+                       y = y_axis * 1.05, yend = y_axis * 1.05,
+                       color = col_bar), size = 3) +
+      scale_color_manual(name = col_bar, values = ggsci::pal_npg()(10)) +
+      facet_wrap(as.formula(paste("~", group)), scales = "free",
+                 labeller = labeller(.cols = facet_label),
+                 ncol = 3)
+  }
 
   ## Format and save result as a list
   data2plot <- data2plot %>%
     select(-c(x_axis, y_axis))
-  colnames(data2plot)[ (ncol(data2plot)+1-length(data2plot)) : ncol(data2plot) ] <- var_cols
+  colnames(data2plot)[ (ncol(data2plot)+1-length(var_cols)) : ncol(data2plot) ] <- var_cols
+  data2plot <- data2plot[,!duplicated(colnames(data2plot))]
   # save output
   listOut <- list(data = data2plot,
                   plot = taxa_barplot_ranked)
@@ -326,7 +351,7 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
   return(listOut)
 }
 
-#---------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------ ---------------------------------------------------------
 
 #' Rank taxa
 #'
