@@ -32,7 +32,7 @@
 #' @export
 
 profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
-                                    col_bar = NULL, top_taxa = NULL, show_top = NULL,
+                                     col_bar = NULL, top_taxa = NULL, show_top = NULL,
                                     group = NULL, taxa_perc_cutoff = NULL,
                                     ord_by = FALSE, rm_na = FALSE, ...) {
 
@@ -236,16 +236,18 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
     listOut <- .profile_taxa_bar_plot(data2plot = physeq_rank_melted_2_plot,
                                       melted_physeq = physeq_rank_melted,
                                       x_var = x_var, col_bar = col_bar,
-                                      y_bar = tax_rank, group = group,
-                                      ord_by = ord_by, facet_label = facet_label)
+                                      y_var = tax_rank, group = group,
+                                      count_type = count_type, ord_by = ord_by,
+                                      facet_label = facet_label)
   }
 
   return(listOut)
 }
 
 # helper (hidden) function
-.profile_taxa_bar_plot <- function(data2plot, melted_physeq, x_var, col_bar, y_bar,
-                                   group = NULL, ord_by = FALSE, facet_label = NULL) {
+.profile_taxa_bar_plot <- function(data2plot, melted_physeq, x_var, col_bar, y_var,
+                                   count_type = "abs", group = NULL, ord_by = FALSE,
+                                   facet_label = NULL) {
 
   ## packages
   require("ggplot2")
@@ -258,6 +260,13 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
   if ( !is.null(group) ) {
     var_cols <- c(group, col_bar)
     cols_names <- c("group", "col_bar")
+  }
+
+  # perc vs. abs y-axis column selection
+  if ( count_type == "abs" ) {
+    abundance = "Abundance"
+  } else {
+    abundance = "Percentage"
   }
 
   ## Annotation df
@@ -293,7 +302,7 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
   taxa_barplot_ranked  <- ggplot(data = data2plot,
                                  aes_string(x = x_var,
                                             y = abundance,
-                                            fill = tax_rank)) +
+                                            fill = y_var)) +
     geom_bar(stat = "identity") +
     theme_classic() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
