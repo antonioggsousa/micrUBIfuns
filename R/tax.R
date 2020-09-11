@@ -294,14 +294,23 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
         mutate("x_axis" = order(col_bar))
       x_var_levels <- as.character(annot_df[,x_var, drop = TRUE]) # order 'x_var' fct var
     }
-  }
-  if ( is.null(group) ) {
-
+  } else if ( isFALSE(ord_by) & !is.null(col_bar) & !is.null(group) ) {
+    print(annot_df) # aggs
+    annot_df <- annot_df %>%
+      group_by(group) %>%
+      mutate("x_axis" = order(col_bar))
+    print(annot_df) # aggs
+    x_var_levels <- annot_df %>% pull(.data[[x_var]]) %>%
+      levels(.) # order 'x_var' fct var
+  } else {
+    annot_df <- annot_df %>%
+      mutate("x_axis" = order(.data[x_var]))
+    x_var_levels <- annot_df %>% pull(.data[[x_var]]) %>%
+      levels(.) # order 'x_var' fct var
   }
   data2plot <- left_join(data2plot, annot_df, by = x_var)
   data2plot <- data2plot %>% ungroup() %>%
     mutate(!!x_var := factor(.data[[x_var]], levels = x_var_levels))
-
   if ( is.null(group) ) {
     annot_df$y_axis <- data2plot %>% group_by(.data[[x_var]]) %>%
       summarise("Sum" = sum(.data[[abundance]])) %>% pull(Sum) %>% max(.)
@@ -351,7 +360,7 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
   return(listOut)
 }
 
-#------------------------------------------------------ ---------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------
 
 #' Rank taxa
 #'
