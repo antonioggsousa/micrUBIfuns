@@ -295,11 +295,9 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
       x_var_levels <- as.character(annot_df[,x_var, drop = TRUE]) # order 'x_var' fct var
     }
   } else if ( isFALSE(ord_by) & !is.null(col_bar) & !is.null(group) ) {
-    print(annot_df) # aggs
     annot_df <- annot_df %>%
       group_by(group) %>%
       mutate("x_axis" = order(col_bar))
-    print(annot_df) # aggs
     x_var_levels <- annot_df %>% pull(.data[[x_var]]) %>%
       levels(.) # order 'x_var' fct var
   } else {
@@ -330,11 +328,17 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
      y_axis_data <- data2plot %>% group_by(group, .data[[x_var]]) %>%
       summarise("Sum" = sum(.data[[abundance]])) %>%
       summarise("y_axis" = max(Sum))
+     width_facets <- annot_df %>% group_by(group) %>%
+       distinct(.data[[x_var]]) %>%  tally() %>%
+       mutate("facet_width" = n / max(n)) %>%
+       select(-n)
+     y_axis_data <- left_join(y_axis_data, width_facets, by = "group")
      data2plot <- left_join(data2plot, y_axis_data, by = "group")
      taxa_barplot_ranked  <- ggplot(data = data2plot,
-                                   aes_string(x = x_var,
-                                              y = abundance,
-                                              fill = y_var)) +
+                                   aes(x = .data[[x_var]],
+                                       y = .data[[abundance]],
+                                       fill = .data[[y_var]],
+                                       width = .9 * facet_width)) +
       geom_bar(stat = "identity") +
       theme_classic() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
@@ -346,6 +350,7 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
       facet_wrap(as.formula(paste("~", group)), scales = "free",
                  labeller = labeller(.cols = facet_label),
                  ncol = 3)
+     data2plot <- data2plot %>% select(-facet_width)
   }
 
   ## Format and save result as a list
