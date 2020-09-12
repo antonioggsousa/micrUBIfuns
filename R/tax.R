@@ -134,6 +134,16 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
     }
     if ( is.null(col_bar) ) {
     # plot
+    physeq_rank_melted_2_plot <- physeq_rank_melted_2_plot %>%
+      mutate(!!tax_rank := factor(.data[[tax_rank]],
+                                  levels =
+                                    physeq_rank_melted_2_plot %>% ungroup() %>%
+                                    group_by(.data[[tax_rank]]) %>%
+                                    summarise("Sum" = sum(.data[[abundance]])) %>%
+                                    arrange(Sum) %>%
+                                    pull(.data[[tax_rank]]) %>%
+                                    as.character()
+        ))
     taxa_barplot_ranked <-
       ggplot(data = physeq_rank_melted_2_plot, aes_string(x = x_var,
                                                           y = abundance,
@@ -210,6 +220,16 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
     }
     if ( is.null(col_bar) ) {
       # plot
+      physeq_rank_melted_2_plot <- physeq_rank_melted_2_plot %>%
+        mutate(!!tax_rank := factor(.data[[tax_rank]],
+                                    levels =
+                                      physeq_rank_melted_2_plot %>% ungroup() %>%
+                                        group_by(.data[[tax_rank]]) %>%
+                                        summarise("Sum" = sum(.data[[abundance]])) %>%
+                                        arrange(Sum) %>%
+                                        pull(.data[[tax_rank]]) %>%
+                                        as.character()
+                                    ))
       taxa_barplot_ranked <-
         ggplot(data = physeq_rank_melted_2_plot, aes_string(x = x_var,
                                                             y = abundance,
@@ -218,8 +238,6 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
         theme_bw() +
         theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
         ylab(y_lab) +
-        #geom_text(aes_string(label = abundance),
-        #          angle = 45, vjust=0, hjust = 0, size=3) +
         facet_wrap(as.formula(paste("~", group)), scales = "free",
                    labeller = labeller(.cols = facet_label),
                    ncol = 3)
@@ -270,6 +288,18 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
     abundance = "Percentage"
     y_lab <- "Percentage (%)"
   }
+
+  ## descending order "y_var"
+  data2plot <- data2plot %>%
+    mutate(!!y_var := factor(.data[[y_var]],
+                             levels =
+                               data2plot %>% ungroup() %>%
+                               group_by(.data[[y_var]]) %>%
+                               summarise("Sum" = sum(.data[[abundance]])) %>%
+                               arrange(Sum) %>%
+                               pull(.data[[y_var]]) %>%
+                               as.character()
+    ))
 
   ## Annotation df
   annot_df <- data.frame(sort(unique(data2plot[,x_var, drop=TRUE]) ))
