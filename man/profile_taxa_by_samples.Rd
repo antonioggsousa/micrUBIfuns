@@ -45,9 +45,10 @@ Default is 'NULL'.}
 \item{taxa_perc_cutoff}{percentage cutoff to remove less abundant taxa than
 'taxa_perc_cutoff'. Default is 'NULL'.}
 
-\item{ord_by}{logical. Default is 'FALSE'. Order the samples (x-axis) by the levels
-from the character/factorial variable indicated at 'col_bar'. Only applied if
-'col_bar' parameter is used.}
+\item{ord_by}{logical (or character). Default is 'FALSE'. Order the samples (x-axis)
+by the levels from the character/factorial variable indicated at 'col_bar'. Only
+applied if 'col_bar' parameter is used. If provided a character of the 'col_bar'
+factor levels, the samples will be ordered by the 'col_bar' factor level provided.}
 
 \item{rm_na}{include (TRUE) or not (FALSE) NAs, i.e., taxa without classification at
 the taxonomic level specified at 'tax_rank'.}

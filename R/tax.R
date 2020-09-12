@@ -21,9 +21,10 @@
 #' Default is 'NULL'.
 #' @param taxa_perc_cutoff percentage cutoff to remove less abundant taxa than
 #' 'taxa_perc_cutoff'. Default is 'NULL'.
-#' @param ord_by logical. Default is 'FALSE'. Order the samples (x-axis) by the levels
-#' from the character/factorial variable indicated at 'col_bar'. Only applied if
-#' 'col_bar' parameter is used.
+#' @param ord_by logical (or character). Default is 'FALSE'. Order the samples (x-axis)
+#' by the levels from the character/factorial variable indicated at 'col_bar'. Only
+#' applied if 'col_bar' parameter is used. If provided a character of the 'col_bar'
+#' factor levels, the samples will be ordered by the 'col_bar' factor level provided.
 #' @param rm_na include (TRUE) or not (FALSE) NAs, i.e., taxa without classification at
 #' the taxonomic level specified at 'tax_rank'.
 #' @param ... parameters to be passed to the function 'filter_feature_table()'.
@@ -32,7 +33,7 @@
 #' @export
 
 profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
-                                     col_bar = NULL, top_taxa = NULL, show_top = NULL,
+                                    col_bar = NULL, top_taxa = NULL, show_top = NULL,
                                     group = NULL, taxa_perc_cutoff = NULL,
                                     ord_by = FALSE, rm_na = FALSE, ...) {
 
@@ -53,6 +54,7 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
   stopifnot( !all(c(!is.null(show_top), !is.null(taxa_perc_cutoff))) )
   stopifnot( is.logical(rm_na) )
   if ( !is.null(group) ) stopifnot( all(c(length(group) == 1, group %in% sample_variables(physeq))) )
+  if ( !is.null(col_bar) ) stopifnot( all(c(length(col_bar) == 1, group %in% sample_variables(physeq))) )
   if ( !is.null(show_top) ) stopifnot( all(c(length(show_top)==1, is.numeric(show_top))) )
   if ( !is.null(taxa_perc_cutoff) ) stopifnot( all(c(length(taxa_perc_cutoff)==1, is.numeric(taxa_perc_cutoff)), taxa_perc_cutoff < 100) )
   checkInteger <- (physeq@otu_table@.Data%%1==0) # to deal with double like, e.g., 1 (by default - double)
@@ -309,10 +311,11 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
   annot_df <- annot_df %>%
     mutate_if(is.character,as.factor)
   colnames(annot_df)[ (ncol(annot_df)+1-length(var_cols)) : ncol(annot_df) ] <- cols_names;
-  if ( ord_by ) { # order 'x_var' by 'col_bar'
+  if ( !isFALSE(ord_by) ) { # order 'x_var' by 'col_bar'
     if( !is.null(group) ) {
       annot_df <- annot_df %>%
         group_by(group) %>%
+        `if`( is.character(ord_by), mutate(., col_bar = factor(col_bar, levels = ord_by)), .) %>%
         arrange(col_bar)
       annot_df <- annot_df %>%
         group_by(group) %>%
