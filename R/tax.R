@@ -1,3 +1,120 @@
+#' Plot heatmap
+#'
+#' Plots an hierarchial heatmap with the package 'ComplexHeatmap' for a given a phyloseq object
+#' with 'otu_table', 'tax_table', 'sam_data' (required). If provided a 'tax_rank' the heatmap
+#' will be subsetted to the taxonomic rank specified. Samples can be annotated by specifying one
+#' or more categorical/factor variables (character) among sample data (in 'sample_variables(physeq)').
+#' @param physeq phyloseq-class object with 'otu_table', 'tax_table', 'sam_data' slots (required).
+#' @param tax_rank taxonomic rank (character). One of the taxonomic ranks among
+#' the column names of 'tax_table()' of the 'physeq' object given.
+#' @param rm_na include ('TRUE') or not ('FALSE') NAs (logical), i.e., taxa without classification at
+#' the taxonomic level specified at 'tax_rank'. It only works if 'tax_rank' was provided.
+#' Otherwise it is ignored.
+#' @param annot_samples one or more categorical/factor variables (character) among sample data
+#' (in 'sample_variables(physeq)'). Default is 'NULL'.
+#' @param norm_mth normalize/transform the feature table. Default is 'NULL'. One character to pass to
+#' 'vegan::decostand()' - one of c("total", "max", "frequency", "normalize", "range", "rank",
+#' "standardize", "pa", "chi", "hellinger", "log").
+#' @param scale_by scale (Z-score) data by "samples" or "taxa" (character). Default is 'NULL'.
+#' @param tr_heat transpose heatmap. Default is 'FALSE' (logical).
+#' @param set_seed set seed to allow reproducibility. Default is '1024' (numeric). Set to 'NULL' to turn it off.
+#' @param ... parameters to pass to the function 'ComplexHeatmap::Heatmap()' with the exception of
+#' 'matrix'. Also 'top_annotation' (samples in columns) or 'left_annotation' (samples in rows)
+#' cannot be specified if 'annot_samples' was specified.
+#' @return Heatmap (from 'ComplexHeatmap').
+#' @export
+
+plot_taxa_heatmap <- function(physeq, tax_rank = NULL,
+                              rm_na = FALSE,
+                              annot_samples = NULL,
+                              norm_mth = NULL,
+                              scale_by = NULL, # "samples" or "taxa"
+                              tr_heat = FALSE,
+                              set_seed = 1024,
+                              ...) {
+
+  # Written: 16/09/2020
+  # Last update: 16/09/2020
+
+  # packages
+  require("phyloseq")
+  require("dplyr")
+  require("ComplexHeatmap")
+
+  # check input
+  if ( !is.null(scale_by) ) stopifnot( scale_by %in% c("samples", "taxa") & length(scale_by)==1 )
+  if ( !is.null(norm_mth) ) stopifnot( norm_mth %in% c("total", "max", "frequency",
+                                                       "normalize", "range", "rank",
+                                                       "standardize", "pa", "chi",
+                                                       "hellinger", "log") &
+                                         length(norm_mth)==1 )
+  if ( !is.null(annot_samples) ) stopifnot( annot_samples %in% sample_variables(physeq) )
+
+  samples <- "rows"
+  # Get data
+  if ( !is.null(tax_rank) ) { # add features taxa to col names
+    feature_w_tax = TRUE
+  } else {
+    feature_w_tax = FALSE
+  }
+  physeq_list <- get_physeq_tbls(physeq = physeq, tax_rank = tax_rank,
+                                 rm_na = rm_na, feature_w_tax = feature_w_tax)
+
+
+  # normalize
+  if ( !is.null(norm_mth) ) physeq_list[["feature"]] <- vegan::decostand(x = physeq_list[["feature"]],
+                                                                         method = norm_mth)
+
+  # z-score
+  if ( !is.null(scale_by) ) {
+    if ( scale_by == "taxa" ) {
+      physeq_list[["feature"]] <- scale(physeq_list[["feature"]])
+      } else {
+        physeq_list[["feature"]] <- t(scale(t(physeq_list[["feature"]])))
+      }
+    }
+
+  if ( isTRUE(tr_heat) ) {
+    physeq_list[["feature"]] <- t(physeq_list[["feature"]])
+    samples <- "cols"
+  }
+
+  # annot heatmap samples
+  if ( !is.null(annot_samples) ) {
+    annot_df <- data.frame(physeq_list[["metadata"]][,annot_samples])
+    colnames(annot_df) <- annot_samples; rownames(annot_df) <- rownames(physeq_list[["metadata"]]);
+    if ( samples == "rows") {
+      annot_samp <- ComplexHeatmap::HeatmapAnnotation(df = annot_df, which = "row")
+      # set seed and plot heatmap
+      set.seed(set_seed)
+      heat_plot <- do.call(ComplexHeatmap::Heatmap,
+                           list(matrix = physeq_list[["feature"]],
+                                left_annotation = annot_samp,
+
+                                ...))
+    } else {
+      annot_samp <- ComplexHeatmap::HeatmapAnnotation(df = annot_df)
+      # set seed and plot heatmap
+      set.seed(set_seed)
+      heat_plot <- do.call(ComplexHeatmap::Heatmap,
+                           list(matrix = physeq_list[["feature"]],
+                                top_annotation = annot_samp,
+                                ...))
+
+    }
+  } else {
+    # set seed and plot heatmap
+    set.seed(set_seed)
+    heat_plot <- do.call(ComplexHeatmap::Heatmap,
+                         list(matrix = physeq_list[["feature"]],
+                              ...))
+  }
+
+  return(heat_plot)
+}
+
+#------------------------------------------------------------------------------------------------------------------------
+
 #' Profile taxa by samples
 #'
 #' Given a phyloseq object (with absolute abundance counts) and a taxonomic

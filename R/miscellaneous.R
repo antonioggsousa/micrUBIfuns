@@ -22,7 +22,8 @@ get_physeq_tbls <- function(physeq, tax_rank = NULL,
                             rm_na = FALSE,
                             feature_w_tax = FALSE) {
 
-  # Last update: 15/09/2020
+  # Written: 15/09/2020
+  # Last update: 16/09/2020
 
   # packages
   require("phyloseq")
@@ -54,6 +55,7 @@ get_physeq_tbls <- function(physeq, tax_rank = NULL,
   physeq_list[["taxonomy"]] <- physeq@tax_table@.Data
   physeq_list[["metadata"]] <- data.frame(physeq@sam_data@.Data)
   colnames(physeq_list[["metadata"]]) <- physeq@sam_data@names
+  rownames(physeq_list[["metadata"]]) <- physeq@sam_data@row.names
 
   # get 'feature_w_tax'
   if ( isTRUE(feature_w_tax) & !is.null(tax_rank) ) {

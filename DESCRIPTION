@@ -11,13 +11,17 @@ Depends:
   dplyr,
   data.table,
   ggplot2,
-  ggsci
+  ggsci, 
+  ComplexHeatmap,
+  vegan
 Imports:
   phyloseq,
   dplyr,
   data.table,
   ggplot2,
-  ggsci
+  ggsci, 
+  ComplexHeatmap,
+  vegan
 License: MIT
 Encoding: UTF-8
 LazyData: true
