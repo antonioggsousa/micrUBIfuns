@@ -17,7 +17,8 @@
 #' "standardize", "pa", "chi", "hellinger", "log").
 #' @param scale_by scale (Z-score) data by "samples" or "taxa" (character). Default is 'NULL'.
 #' @param tr_heat transpose heatmap. Default is 'FALSE' (logical).
-#' @param set_seed set seed to allow reproducibility. Default is '1024' (numeric). Set to 'NULL' to turn it off.
+#' @param set_seed set seed to allow reproducibility. Default is '1024' (numeric). Set to 'NULL' to
+#' turn it off.
 #' @param ... parameters to pass to the function 'ComplexHeatmap::Heatmap()' with the exception of
 #' 'matrix'. Also 'top_annotation' (samples in columns) or 'left_annotation' (samples in rows)
 #' cannot be specified if 'annot_samples' was specified.
@@ -144,6 +145,7 @@ plot_taxa_heatmap <- function(physeq, tax_rank = NULL,
 #' factor levels, the samples will be ordered by the 'col_bar' factor level provided.
 #' @param rm_na include (TRUE) or not (FALSE) NAs, i.e., taxa without classification at
 #' the taxonomic level specified at 'tax_rank'.
+#' @param fill_other
 #' @param ... parameters to be passed to the function 'filter_feature_table()'.
 #' @return It returns a list with a tibble data frame ('$data') and ggplot ('$plot')
 #' profiling the taxa picked at the taxonomic rank select at 'tax_rank' by samples.
@@ -152,7 +154,8 @@ plot_taxa_heatmap <- function(physeq, tax_rank = NULL,
 profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
                                     col_bar = NULL, top_taxa = NULL, show_top = NULL,
                                     group = NULL, taxa_perc_cutoff = NULL,
-                                    ord_by = FALSE, rm_na = FALSE, ...) {
+                                    ord_by = FALSE, rm_na = FALSE, fill_other = FALSE,
+                                    ...) {
 
   # packages
   require("phyloseq")
@@ -169,7 +172,7 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
   stopifnot( all(c(length(tax_rank) == 1, tax_rank %in% rank_names(physeq))) )
   stopifnot( count_type %in% c("abs", "perc") )
   stopifnot( !all(c(!is.null(show_top), !is.null(taxa_perc_cutoff))) )
-  stopifnot( is.logical(rm_na) )
+  stopifnot( c(is.logical(rm_na), is.logical(fill_other)) )
   if ( !is.null(group) ) stopifnot( all(c(length(group) == 1, group %in% sample_variables(physeq))) )
   if ( !is.null(col_bar) ) stopifnot( all(c(length(col_bar) == 1, group %in% sample_variables(physeq))) )
   if ( !is.null(show_top) ) stopifnot( all(c(length(show_top)==1, is.numeric(show_top))) )
@@ -235,7 +238,17 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
       physeq_rank_melted_2_plot <-
         physeq_rank_melted_2_plot %>%
         filter(.data[[tax_rank]] %in% list_taxa[1:show_top])
-    }
+      if ( fill_other ) { # fill the remaining empth space with "Other"
+        physeq_rank_melted_2_plot <- physeq_rank_melted_2_plot %>%
+          ungroup(.) %>%
+          mutate_if(is.factor, as.character)
+        physeq_rank_melted_2_plot <- physeq_rank_melted_2_plot %>%
+          group_by(.data[[x_var]]) %>%
+          summarize("Percentage" = 100 - sum(Percentage)) %>%
+          mutate(!!tax_rank := "Other") %>%
+          bind_rows(., physeq_rank_melted_2_plot)
+        }
+      }
     # filter taxa based on percentage
     if ( !is.null(taxa_perc_cutoff) ) {
       if ( count_type == "abs" ) {
@@ -315,12 +328,23 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
 
     # show top taxa
     if ( !is.null(show_top) ) {
+      show_top <- as.numeric(show_top)
       list_taxa <- physeq_rank_melted_2_plot %>%
         pull(.data[[tax_rank]]) %>%
         levels(.)
       physeq_rank_melted_2_plot <-
         physeq_rank_melted_2_plot %>%
         filter(.data[[tax_rank]] %in% list_taxa[1:show_top])
+      if ( fill_other ) { # fill the remaining empth space with "Other"
+        physeq_rank_melted_2_plot <- physeq_rank_melted_2_plot %>%
+          ungroup(.) %>%
+          mutate_if(is.factor, as.character)
+        physeq_rank_melted_2_plot <- physeq_rank_melted_2_plot %>%
+          group_by(.data[[x_var]]) %>%
+          summarize("Percentage" = 100 - sum(Percentage)) %>%
+          mutate(!!tax_rank := "Other") %>%
+          bind_rows(., physeq_rank_melted_2_plot)
+      }
     }
     # filter taxa based on percentage
     if ( !is.null(taxa_perc_cutoff) ) {
@@ -339,16 +363,29 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
     }
     if ( is.null(col_bar) ) {
       # plot
-      physeq_rank_melted_2_plot <- physeq_rank_melted_2_plot %>%
-        mutate(!!tax_rank := factor(.data[[tax_rank]],
-                                    levels =
-                                      physeq_rank_melted_2_plot %>% ungroup() %>%
+      if ( fill_other & !is.null(show_top) ) {
+        tax_level_order <- physeq_rank_melted_2_plot %>% ungroup() %>%
+          group_by(.data[[tax_rank]]) %>%
+          summarise("Sum" = sum(.data[[abundance]])) %>%
+          arrange(Sum) %>%
+          pull(.data[[tax_rank]]) %>%
+          as.character()
+        tax_level_order <- c(tax_level_order[tax_level_order!="Other"], "Other")
+        physeq_rank_melted_2_plot <- physeq_rank_melted_2_plot %>%
+          mutate(!!tax_rank := factor(.data[[tax_rank]],
+                                      levels = tax_level_order ))
+      } else {
+        physeq_rank_melted_2_plot <- physeq_rank_melted_2_plot %>%
+          mutate(!!tax_rank := factor(.data[[tax_rank]],
+                                      levels =
+                                        physeq_rank_melted_2_plot %>% ungroup() %>%
                                         group_by(.data[[tax_rank]]) %>%
                                         summarise("Sum" = sum(.data[[abundance]])) %>%
                                         arrange(Sum) %>%
                                         pull(.data[[tax_rank]]) %>%
                                         as.character()
-                                    ))
+          ))
+    }
       taxa_barplot_ranked <-
         ggplot(data = physeq_rank_melted_2_plot, aes_string(x = x_var,
                                                             y = abundance,
@@ -375,7 +412,8 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
                                       x_var = x_var, col_bar = col_bar,
                                       y_var = tax_rank, group = group,
                                       count_type = count_type, ord_by = ord_by,
-                                      facet_label = facet_label)
+                                      facet_label = facet_label,
+                                      fill_other = fill_other)
   }
 
   return(listOut)
@@ -384,7 +422,7 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
 # helper (hidden) function
 .profile_taxa_bar_plot <- function(data2plot, melted_physeq, x_var, col_bar, y_var,
                                    count_type = "abs", group = NULL, ord_by = FALSE,
-                                   facet_label = NULL) {
+                                   facet_label = NULL, fill_other = FALSE) {
 
   ## packages
   require("ggplot2")
@@ -409,16 +447,29 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
   }
 
   ## descending order "y_var"
-  data2plot <- data2plot %>%
-    mutate(!!y_var := factor(.data[[y_var]],
-                             levels =
-                               data2plot %>% ungroup() %>%
-                               group_by(.data[[y_var]]) %>%
-                               summarise("Sum" = sum(.data[[abundance]])) %>%
-                               arrange(Sum) %>%
-                               pull(.data[[y_var]]) %>%
-                               as.character()
-    ))
+  if ( fill_other ) {
+    tax_level_order <- data2plot %>% ungroup() %>%
+      group_by(.data[[y_var]]) %>%
+      summarise("Sum" = sum(.data[[abundance]])) %>%
+      #summarise("Sum" = sum(Abundance)) %>% # aggs: order fct var by abs. abundance
+      arrange(Sum) %>%
+      pull(.data[[y_var]]) %>%
+      as.character()
+    tax_level_order <- c(tax_level_order[tax_level_order!="Other"], "Other")
+    data2plot <- data2plot %>%
+      mutate(!!y_var := factor(.data[[y_var]], levels = tax_level_order ))
+    } else {
+      data2plot <- data2plot %>%
+        mutate(!!y_var := factor(.data[[y_var]],
+                                 levels =
+                                   data2plot %>% ungroup() %>%
+                                   group_by(.data[[y_var]]) %>%
+                                   summarise("Sum" = sum(.data[[abundance]])) %>%
+                                   arrange(Sum) %>%
+                                   pull(.data[[y_var]]) %>%
+                                   as.character()
+        ))
+    }
 
   ## Annotation df
   annot_df <- data.frame(sort(unique(data2plot[,x_var, drop=TRUE]) ))
@@ -428,6 +479,7 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
   annot_df <- annot_df %>%
     mutate_if(is.character,as.factor)
   colnames(annot_df)[ (ncol(annot_df)+1-length(var_cols)) : ncol(annot_df) ] <- cols_names;
+
   if ( !isFALSE(ord_by) ) { # order 'x_var' by 'col_bar'
     if( !is.null(group) ) {
       annot_df <- annot_df %>%
@@ -452,7 +504,7 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
       levels(.) # order 'x_var' fct var
   } else {
     annot_df <- annot_df %>%
-      mutate("x_axis" = order(.data[x_var]))
+      mutate("x_axis" = order(.data[[x_var]]))
     x_var_levels <- annot_df %>% pull(.data[[x_var]]) %>%
       levels(.) # order 'x_var' fct var
   }
@@ -460,7 +512,7 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
   data2plot <- data2plot %>% ungroup() %>%
     mutate(!!x_var := factor(.data[[x_var]], levels = x_var_levels))
   if ( is.null(group) ) {
-    annot_df$y_axis <- data2plot %>% group_by(.data[[x_var]]) %>%
+    data2plot$y_axis <- data2plot %>% group_by(.data[[x_var]]) %>%
       summarise("Sum" = sum(.data[[abundance]])) %>% pull(Sum) %>% max(.)
     taxa_barplot_ranked  <- ggplot(data = data2plot,
                                    aes_string(x = x_var,
@@ -514,6 +566,21 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
 
   return(listOut)
 }
+
+# helper function to add extra layers of row annotation to the profile_taxa_bar_plot()
+# .add_col_bar <- function(plot, physeq, extra_col_bar) {
+#   data_from_plot <- plot$data
+#   metadata <- data.frame("Sample" = rownames(sample_data(physeq)),
+#                          "Extra_bar" = get_variable(physeq = physeq,
+#                                                     varName = extra_col_bar))
+#   data_to_plot <- left_join(data_from_plot, metadata, by = "Sample")
+#   plot$data <- data_to_plot
+#   Plot <- plot + geom_segment( aes(x = x_axis - 0.5, xend = x_axis + 0.5,
+#                                    y = y_axis * 1.15, yend = y_axis * 1.15,
+#                                    colour = Extra_bar), size = 3) +
+#     scale_color_brewer(palette = "Spectral")
+#   return(Plot)
+# }
 
 #----------------------------------------------------------------------------------------------------------------
 

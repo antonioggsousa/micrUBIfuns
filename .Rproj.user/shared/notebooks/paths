@@ -5,4 +5,7 @@
 /mnt/cf9fda1c-c2b7-4946-9054-b37aad1c090a/resources/R_microbiome_funs/micrUBIfuns/R/alpha_div.R="4022E66"
 /mnt/cf9fda1c-c2b7-4946-9054-b37aad1c090a/resources/R_microbiome_funs/micrUBIfuns/R/beta_div.R="357375FE"
 /mnt/cf9fda1c-c2b7-4946-9054-b37aad1c090a/resources/R_microbiome_funs/micrUBIfuns/R/miscellaneous.R="343B8D34"
+/mnt/cf9fda1c-c2b7-4946-9054-b37aad1c090a/resources/R_microbiome_funs/micrUBIfuns/R/tax.R="E4991EE6"
 /mnt/cf9fda1c-c2b7-4946-9054-b37aad1c090a/resources/R_microbiome_funs/micrUBIfuns/man/beta_boxplot.Rd="1806EEDF"
+/mnt/cf9fda1c-c2b7-4946-9054-b37aad1c090a/resources/R_microbiome_funs/micrUBIfuns/man/filter_feature_table.Rd="5954C024"
+/mnt/cf9fda1c-c2b7-4946-9054-b37aad1c090a/resources/R_microbiome_funs/micrUBIfuns/man/rank_taxa.Rd="F4664285"
