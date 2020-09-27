@@ -157,6 +157,9 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
                                     ord_by = FALSE, rm_na = FALSE, fill_other = FALSE,
                                     ...) {
 
+  # Written: 27/09/2020
+  # Last update: 27/09/2020
+
   # packages
   require("phyloseq")
   require("dplyr")
@@ -340,7 +343,7 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
           ungroup(.) %>%
           mutate_if(is.factor, as.character)
         physeq_rank_melted_2_plot <- physeq_rank_melted_2_plot %>%
-          group_by(.data[[x_var]]) %>%
+          group_by(.data[[x_var]], .data[[group]]) %>%
           summarize("Percentage" = 100 - sum(Percentage)) %>%
           mutate(!!tax_rank := "Other") %>%
           bind_rows(., physeq_rank_melted_2_plot)
