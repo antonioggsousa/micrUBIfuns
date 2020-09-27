@@ -346,7 +346,11 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
           group_by(.data[[group]], .data[[x_var]]) %>%
           summarize("Percentage" = 100 - sum(Percentage)) %>%
           mutate(!!tax_rank := "Other") %>%
-          bind_rows(., physeq_rank_melted_2_plot)
+          bind_rows(., physeq_rank_melted_2_plot) %>%
+          ungroup(.) %>%
+          mutate(!!group := factor(.data[[group]],
+                                   levels = unique(n_samp_by_group[,group, drop = TRUE]))) %>%
+          group_by(.data[[group]], .data[[x_var]])
       }
     }
     # filter taxa based on percentage
