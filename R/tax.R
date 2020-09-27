@@ -343,7 +343,7 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
           ungroup(.) %>%
           mutate_if(is.factor, as.character)
         physeq_rank_melted_2_plot <- physeq_rank_melted_2_plot %>%
-          group_by(.data[[x_var]], .data[[group]]) %>%
+          group_by(.data[[group]], .data[[x_var]]) %>%
           summarize("Percentage" = 100 - sum(Percentage)) %>%
           mutate(!!tax_rank := "Other") %>%
           bind_rows(., physeq_rank_melted_2_plot)
