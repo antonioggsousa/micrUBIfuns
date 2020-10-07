@@ -15,6 +15,7 @@ profile_taxa_by_samples(
   taxa_perc_cutoff = NULL,
   ord_by = FALSE,
   rm_na = FALSE,
+  fill_other = FALSE,
   ...
 )
 }

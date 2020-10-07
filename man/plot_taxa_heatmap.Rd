@@ -37,7 +37,8 @@ Otherwise it is ignored.}
 
 \item{tr_heat}{transpose heatmap. Default is 'FALSE' (logical).}
 
-\item{set_seed}{set seed to allow reproducibility. Default is '1024' (numeric). Set to 'NULL' to turn it off.}
+\item{set_seed}{set seed to allow reproducibility. Default is '1024' (numeric). Set to 'NULL' to
+turn it off.}
 
 \item{...}{parameters to pass to the function 'ComplexHeatmap::Heatmap()' with the exception of
 'matrix'. Also 'top_annotation' (samples in columns) or 'left_annotation' (samples in rows)

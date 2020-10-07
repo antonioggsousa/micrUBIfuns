@@ -431,6 +431,9 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
                                    count_type = "abs", group = NULL, ord_by = FALSE,
                                    facet_label = NULL, fill_other = FALSE) {
 
+  # Written: 27/09/2020
+  # Last update: 07/10/2020
+
   ## packages
   require("ggplot2")
   require("dplyr")
@@ -560,14 +563,13 @@ profile_taxa_by_samples <- function(physeq, tax_rank, count_type = "abs",
                  labeller = labeller(.cols = facet_label),
                  ncol = 3)
      data2plot <- data2plot %>% select(-facet_width)
-     print(facet_label) # aggs
   }
 
   ## Format and save result as a list
   data2plot <- data2plot %>%
     select(-c(x_axis, y_axis))
-  #colnames(data2plot)[ (ncol(data2plot)+1-length(var_cols)) : ncol(data2plot) ] <- var_cols # aggs
-  #data2plot <- data2plot[,!duplicated(colnames(data2plot))] # aggs
+  colnames(data2plot)[ (ncol(data2plot)+1-length(var_cols)) : ncol(data2plot) ] <- var_cols
+  data2plot <- data2plot[,!duplicated(colnames(data2plot))]
   # save output
   listOut <- list(data = data2plot,
                   plot = taxa_barplot_ranked)
