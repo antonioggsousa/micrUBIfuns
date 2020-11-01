@@ -23,5 +23,5 @@ Prevalence_Relative (the same as Prevalence, but in relative abundance).
 \description{
 Given a phyloseq object and a taxonomic rank (character) it gives the
 prevalence of features (OTUs/ASVs), i.e., the number of samples where
-each feature (OTUs/ASVs) appear (observed).
+each feature (OTUs/ASVs) appear (observed) grouped by taxonomic rank.
 }

@@ -3,10 +3,10 @@ Type: Package
 Title: Set of functions for microbiome analyses
 Version: 0.1.0
 Author: António Sousa <agsousa@igc.gulbenkian.pt>
-Maintainer: António Sousa <agsousa@igc.gulbenkian.pt>
+Maintainer: António Sousa <agsousa@igc.gulbenkian.pt> 
 Description: Set of functions that serve as crutch to microbiome analyses based on other packages. 
 Depends: 
-  R (>= 3.4.4), 
+  R (>= 3.6.3), 
   phyloseq,
   dplyr,
   data.table,
