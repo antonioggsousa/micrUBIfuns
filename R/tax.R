@@ -91,7 +91,6 @@ plot_taxa_heatmap <- function(physeq, tax_rank = NULL,
       heat_plot <- do.call(ComplexHeatmap::Heatmap,
                            list(matrix = physeq_list[["feature"]],
                                 left_annotation = annot_samp,
-
                                 ...))
     } else {
       annot_samp <- ComplexHeatmap::HeatmapAnnotation(df = annot_df)

@@ -2,7 +2,7 @@
 #'
 #' Given a phyloseq object and a taxonomic rank (character) it gives the
 #' prevalence of features (OTUs/ASVs), i.e., the number of samples where
-#' each feature (OTUs/ASVs) appear (observed).
+#' each feature (OTUs/ASVs) appear (observed) grouped by taxonomic rank.
 #' @param physeq phyloseq-class object.
 #' @param tax_rank taxonomic rank (character). One of the taxonomic ranks among
 #' the column names of 'tax_table()' of the 'physeq' object given.
